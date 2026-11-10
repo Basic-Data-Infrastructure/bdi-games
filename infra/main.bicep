@@ -20,6 +20,9 @@ param githubRepository string
 @description('Branch whose pushes are allowed to deploy.')
 param githubBranch string = 'main'
 
+@description('Optional. Set when GitHub sends the subject claim with numeric ids (the error names a subject like repo:<owner>@<id>/<repo>@<id>:ref:...). Written as <owner>@<owner-id>/<repo>@<repo-id>.')
+param githubRepositoryWithIds string = ''
+
 @description('Image tag to run. Leave empty only for the very first deployment, before the pipeline has pushed an image; use `latest` when you deploy this template again.')
 param imageTag string = ''
 
@@ -132,6 +135,23 @@ resource githubTrust 'Microsoft.ManagedIdentity/userAssignedIdentities/federated
       'api://AzureADTokenExchange'
     ]
   }
+}
+
+// Some organizations make GitHub put owner and repository ids in the subject claim.
+resource githubTrustWithIds 'Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentityCredentials@2023-01-31' = if (!empty(githubRepositoryWithIds)) {
+  parent: deployIdentity
+  name: 'github-actions-id-subject'
+  properties: {
+    issuer: 'https://token.actions.githubusercontent.com'
+    subject: 'repo:${githubRepositoryWithIds}:ref:refs/heads/${githubBranch}'
+    audiences: [
+      'api://AzureADTokenExchange'
+    ]
+  }
+  // Azure rejects concurrent writes of federated credentials on one identity.
+  dependsOn: [
+    githubTrust
+  ]
 }
 
 // Contributor on this game's own resources only, so the resource group may be shared with other workloads:

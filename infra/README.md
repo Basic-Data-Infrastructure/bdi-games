@@ -27,6 +27,7 @@
 | `postgresAdminPassword` | alleen bij Postgres | leeg | Wachtwoord van de databasebeheerder, minstens 16 tekens. Alleen nodig met `enablePostgres=true`. |
 | `imageTag` | nee | leeg | Tag van de image die moet draaien. Leeg alleen bij de allereerste uitrol; daarna `latest`. |
 | `githubBranch` | nee | `main` | Branch waarvan pushes mogen deployen. |
+| `githubRepositoryWithIds` | nee | | Alleen nodig als GitHub de repository met id's in het OIDC-subject zet, als `<github-owner>@<owner-id>/<repo>@<repo-id>`. Zie [Problemen oplossen](../docs/deployment.md#problemen-oplossen). |
 | `namePrefix` | nee | `bdigames` | Voorvoegsel voor resourcenamen: 3 tot 12 kleine letters en cijfers. |
 | `location` | nee | regio van de resource group | Regio voor alle resources. |
 | `postgresLocation` | nee | gelijk aan `location` | Afwijkende regio voor PostgreSQL, als je abonnement die in `location` niet mag aanmaken. |

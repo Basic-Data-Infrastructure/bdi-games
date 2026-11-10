@@ -308,6 +308,7 @@ Er draait precies één container en dat hoort zo: de API is niet gemaakt voor m
 
 - **De job deploy wordt overgeslagen**: de variabele `AZURE_CLIENT_ID` ontbreekt, staat onder Secrets in plaats van Variables, of de run draait niet op `main`.
 - **Inloggen mislukt met "No matching federated identity record found"**: Azure vertrouwt alleen `<github-owner>/<repo>` op de branch uit stap 3. Controleer hoofdletters, en of de repository is hernoemd of verplaatst. Rol het template opnieuw uit met de juiste `githubRepository` (en eventueel `githubBranch`).
+- **Dezelfde fout, met een subject als `repo:<github-owner>@<getal>/<repo>@<getal>:ref:refs/heads/main`**: je organisatie laat GitHub id's in het subject zetten. Rol het template opnieuw uit met daarbij `githubRepositoryWithIds=<github-owner>@<getal>/<repo>@<getal>`, overgenomen uit de foutmelding.
 - **Geen toegang tot de registry of de Container App vlak na stap 3**: een nieuwe roltoewijzing werkt soms pas na een paar minuten. Start de run opnieuw.
 - **"The new revision did not become healthy"**: de container start niet goed. Bekijk het logboek (zie [Logboek bekijken](#logboek-bekijken)). Veelvoorkomend:
   - `AUTH_SECRET ontbreekt`: het secret `auth-secret` is leeg of de variabele is verwijderd. Rol het template opnieuw uit.
