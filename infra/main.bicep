@@ -134,9 +134,31 @@ resource githubTrust 'Microsoft.ManagedIdentity/userAssignedIdentities/federated
   }
 }
 
-// Contributor on this resource group only: push images and update the Container App.
-resource deployRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id, deployIdentity.id, contributorRoleId)
+// Contributor on this game's own resources only, so the resource group may be shared with other workloads:
+// push images, update the Container App, and pass its environment and pull identity along on that update.
+resource deployRoleRegistry 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(registry.id, deployIdentity.id, contributorRoleId)
+  scope: registry
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', contributorRoleId)
+    principalId: deployIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource deployRoleEnvironment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(environment.id, deployIdentity.id, contributorRoleId)
+  scope: environment
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', contributorRoleId)
+    principalId: deployIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource deployRolePullIdentity 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(pullIdentity.id, deployIdentity.id, contributorRoleId)
+  scope: pullIdentity
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', contributorRoleId)
     principalId: deployIdentity.properties.principalId
@@ -329,6 +351,16 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
   ] : [
     pullRole
   ]
+}
+
+resource deployRoleApp 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(app.id, deployIdentity.id, contributorRoleId)
+  scope: app
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', contributorRoleId)
+    principalId: deployIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
 }
 
 // The names below match the GitHub Actions variables that .github/workflows/deploy.yml reads.

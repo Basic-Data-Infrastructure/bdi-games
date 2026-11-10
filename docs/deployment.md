@@ -70,7 +70,7 @@ az account set --subscription <subscription-id>
 az group create --name <resource-group> --location <region>
 ```
 
-Kies een regio dicht bij je spelers, bijvoorbeeld `westeurope`. Gebruik een resource group die alleen voor deze game is: de pipeline krijgt rechten op de hele groep, en zo kun je later alles in één keer verwijderen.
+Kies een regio dicht bij je spelers, bijvoorbeeld `westeurope`. Gebruik bij voorkeur een resource group die alleen voor deze game is: dan kun je later alles in één keer verwijderen. Een bestaande resource group mag ook; de pipeline krijgt alleen rechten op de resources van de game, niet op de rest van de groep.
 
 Een nieuw abonnement kent de gebruikte diensten soms nog niet. Registreer ze één keer; dat mag gerust dubbel:
 
@@ -289,7 +289,7 @@ Er draait precies één container en dat hoort zo: de API is niet gemaakt voor m
 ## Beveiliging in het kort
 
 - Er staan geen geheimen in de repository en geen Azure-wachtwoord in GitHub; de pipeline logt in via OIDC en alleen vanaf `main`.
-- De pipeline heeft de rol Contributor op deze ene resource group en kan geen rollen toekennen.
+- De pipeline heeft de rol Contributor alleen op de resources van de game (Container App, omgeving, registry en pull-identity), niet op de rest van de resource group, en kan geen rollen toekennen.
 - De Container App haalt images op met een eigen identiteit; de registry heeft geen beheerderswachtwoord.
 - De game is alleen via HTTPS bereikbaar. Alleen de website, `/api` en `/health` zijn publiek; het interne tick-endpoint niet.
 - De container draait niet als root.

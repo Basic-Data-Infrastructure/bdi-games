@@ -10,7 +10,7 @@
 | Container Apps environment | `<namePrefix>-env` | Omgeving waarin de app draait (Consumption). |
 | Container Registry (Basic) | `<namePrefix><uniek>` | Opslag voor de images die de pipeline bouwt. |
 | Managed identity | `<namePrefix>-pull` | Waarmee de Container App images ophaalt (rol AcrPull op de registry). |
-| Managed identity | `<namePrefix>-deploy` | Waarmee GitHub Actions inlogt via OIDC (rol Contributor op de resource group). |
+| Managed identity | `<namePrefix>-deploy` | Waarmee GitHub Actions inlogt via OIDC (rol Contributor op de Container App, de omgeving, de registry en de pull-identity). |
 | PostgreSQL Flexible Server (Burstable B1ms) | `<namePrefix>-pg-<uniek>` | Alleen bij `enablePostgres=true`: database `bdi` met de sessies. |
 | Container App | `<namePrefix>` | De game: 0,25 vCPU, 0,5 GiB, precies één replica, publiek via HTTPS. |
 
