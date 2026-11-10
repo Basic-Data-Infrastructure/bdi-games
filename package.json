@@ -1,0 +1,30 @@
+{
+  "name": "bdi-game-mobile",
+  "private": true,
+  "workspaces": [
+    "packages/domain",
+    "services/game-api",
+    "apps/web"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @bdi/web",
+    "dev:api": "npm run dev -w @bdi/game-api",
+    "dispatcher": "npm run dispatcher -w @bdi/game-api",
+    "typecheck": "tsc -p packages/domain/tsconfig.json && tsc -p services/game-api/tsconfig.json && tsc -p apps/web/tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "testmode": "node scripts/open-sessions.mjs",
+    "sessions:two": "node scripts/open-sessions.mjs --sessions 2",
+    "build": "npm run build -w @bdi/web",
+    "check:bundle": "npm run build -w @bdi/web && node scripts/check-bundle.mjs",
+    "db:up": "docker compose up -d --wait db",
+    "db:down": "docker compose --profile app down",
+    "docker:up": "docker compose --profile app up --build"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}

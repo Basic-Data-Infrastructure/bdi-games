@@ -1,0 +1,21 @@
+{
+  "name": "@bdi/game-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "dispatcher": "tsx src/dispatcher.ts"
+  },
+  "dependencies": {
+    "@bdi/domain": "*",
+    "hono": "^4.9.8",
+    "@hono/node-server": "^1.19.4",
+    "pg": "^8.16.3",
+    "tsx": "^4.20.5"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.15.5"
+  }
+}

@@ -1,0 +1,42 @@
+# Local use only. `npm run db:up` starts just Postgres for the dev servers;
+# `npm run docker:up` also builds and runs the production image on http://localhost:8080.
+# The credentials below are local placeholders, never production values.
+name: bdi-games
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: bdi
+      POSTGRES_PASSWORD: bdi
+      POSTGRES_DB: bdi
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bdi -d bdi"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    profiles: ["app"]
+    build: .
+    environment:
+      ALLOW_DEV_AUTH: "true"
+      AUTH_SECRET: local-docker-auth-secret
+      INTERNAL_TICK_SECRET: local-docker-tick-secret
+      DATABASE_URL: postgresql://bdi:bdi@db:5432/bdi
+      # Every browser reaches the container through the same Docker gateway address.
+      MAX_OPEN_SESSIONS_PER_IP: "0"
+    ports:
+      - "8080:8080"
+    # Same grace period as Azure Container Apps: time to write pending sessions to Postgres.
+    stop_grace_period: 30s
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:

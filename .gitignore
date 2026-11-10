@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.vite/
+playwright-report/
+test-results/
+data/
+.env
+.env.local
+coverage/
+.shots/
+*.log
+apps/web/dist/
+docs/Video van de BDI game.mp4

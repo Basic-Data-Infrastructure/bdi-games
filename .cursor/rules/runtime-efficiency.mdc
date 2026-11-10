@@ -1,0 +1,15 @@
+---
+description: Keep API, persistence, and cloud I/O efficient — avoid unnecessary bandwidth and work
+alwaysApply: true
+---
+
+# Runtime efficiency (should have)
+
+Hard invariants live in `AGENTS.md`. Treat these as **should-haves** on changes to ticks, storage, SSE, or deployment: do not waste bandwidth, CPU, or storage I/O.
+
+- Postgres is write-behind, not a per-tick log. Do not upsert the full session on every tick, heartbeat, or no-op.
+- Keep the debounced Postgres flush (`PERSIST_INTERVAL_MS`); immediate flush only for **new** or **closed** sessions (and shutdown).
+- Idle/abandoned sessions must stay cheap: close after `SESSION_IDLE_MS` (default 30 min) and delete from memory/Postgres; no steady DB writes or self-ping loops.
+- Memory is source of truth; batch/debounce side effects that leave the process.
+- Before adding intervals or remote I/O, estimate bytes × frequency × open sessions; redesign if one forgotten session can burn hundreds of MB/hour.
+- Record load- or cost-relevant design choices in `docs/design-decisions.md` / `docs/architecture.md`.
