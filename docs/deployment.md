@@ -70,7 +70,7 @@ az account set --subscription <subscription-id>
 az group create --name <resource-group> --location <region>
 ```
 
-Kies een regio dicht bij je spelers, bijvoorbeeld `westeurope`. Gebruik een resource group die alleen voor deze game is: de pipeline krijgt rechten op de hele groep, en zo kun je later alles in één keer verwijderen.
+Kies een regio dicht bij je spelers, bijvoorbeeld `westeurope`. Gebruik bij voorkeur een resource group die alleen voor deze game is: dan kun je later alles in één keer verwijderen. Een bestaande resource group mag ook; de pipeline krijgt alleen rechten op de resources van de game, niet op de rest van de groep.
 
 Een nieuw abonnement kent de gebruikte diensten soms nog niet. Registreer ze één keer; dat mag gerust dubbel:
 
@@ -289,7 +289,7 @@ Er draait precies één container en dat hoort zo: de API is niet gemaakt voor m
 ## Beveiliging in het kort
 
 - Er staan geen geheimen in de repository en geen Azure-wachtwoord in GitHub; de pipeline logt in via OIDC en alleen vanaf `main`.
-- De pipeline heeft de rol Contributor op deze ene resource group en kan geen rollen toekennen.
+- De pipeline heeft de rol Contributor alleen op de resources van de game (Container App, omgeving, registry en pull-identity), niet op de rest van de resource group, en kan geen rollen toekennen.
 - De Container App haalt images op met een eigen identiteit; de registry heeft geen beheerderswachtwoord.
 - De game is alleen via HTTPS bereikbaar. Alleen de website, `/api` en `/health` zijn publiek; het interne tick-endpoint niet.
 - De container draait niet als root.
@@ -308,6 +308,7 @@ Er draait precies één container en dat hoort zo: de API is niet gemaakt voor m
 
 - **De job deploy wordt overgeslagen**: de variabele `AZURE_CLIENT_ID` ontbreekt, staat onder Secrets in plaats van Variables, of de run draait niet op `main`.
 - **Inloggen mislukt met "No matching federated identity record found"**: Azure vertrouwt alleen `<github-owner>/<repo>` op de branch uit stap 3. Controleer hoofdletters, en of de repository is hernoemd of verplaatst. Rol het template opnieuw uit met de juiste `githubRepository` (en eventueel `githubBranch`).
+- **Dezelfde fout, met een subject als `repo:<github-owner>@<getal>/<repo>@<getal>:ref:refs/heads/main`**: je organisatie laat GitHub id's in het subject zetten. Rol het template opnieuw uit met daarbij `githubRepositoryWithIds=<github-owner>@<getal>/<repo>@<getal>`, overgenomen uit de foutmelding.
 - **Geen toegang tot de registry of de Container App vlak na stap 3**: een nieuwe roltoewijzing werkt soms pas na een paar minuten. Start de run opnieuw.
 - **"The new revision did not become healthy"**: de container start niet goed. Bekijk het logboek (zie [Logboek bekijken](#logboek-bekijken)). Veelvoorkomend:
   - `AUTH_SECRET ontbreekt`: het secret `auth-secret` is leeg of de variabele is verwijderd. Rol het template opnieuw uit.

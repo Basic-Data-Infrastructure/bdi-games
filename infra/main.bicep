@@ -20,6 +20,9 @@ param githubRepository string
 @description('Branch whose pushes are allowed to deploy.')
 param githubBranch string = 'main'
 
+@description('Optional. Set when GitHub sends the subject claim with numeric ids (the error names a subject like repo:<owner>@<id>/<repo>@<id>:ref:...). Written as <owner>@<owner-id>/<repo>@<repo-id>.')
+param githubRepositoryWithIds string = ''
+
 @description('Image tag to run. Leave empty only for the very first deployment, before the pipeline has pushed an image; use `latest` when you deploy this template again.')
 param imageTag string = ''
 
@@ -134,9 +137,48 @@ resource githubTrust 'Microsoft.ManagedIdentity/userAssignedIdentities/federated
   }
 }
 
-// Contributor on this resource group only: push images and update the Container App.
-resource deployRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id, deployIdentity.id, contributorRoleId)
+// Some organizations make GitHub put owner and repository ids in the subject claim.
+resource githubTrustWithIds 'Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentityCredentials@2023-01-31' = if (!empty(githubRepositoryWithIds)) {
+  parent: deployIdentity
+  name: 'github-actions-id-subject'
+  properties: {
+    issuer: 'https://token.actions.githubusercontent.com'
+    subject: 'repo:${githubRepositoryWithIds}:ref:refs/heads/${githubBranch}'
+    audiences: [
+      'api://AzureADTokenExchange'
+    ]
+  }
+  // Azure rejects concurrent writes of federated credentials on one identity.
+  dependsOn: [
+    githubTrust
+  ]
+}
+
+// Contributor on this game's own resources only, so the resource group may be shared with other workloads:
+// push images, update the Container App, and pass its environment and pull identity along on that update.
+resource deployRoleRegistry 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(registry.id, deployIdentity.id, contributorRoleId)
+  scope: registry
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', contributorRoleId)
+    principalId: deployIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource deployRoleEnvironment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(environment.id, deployIdentity.id, contributorRoleId)
+  scope: environment
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', contributorRoleId)
+    principalId: deployIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource deployRolePullIdentity 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(pullIdentity.id, deployIdentity.id, contributorRoleId)
+  scope: pullIdentity
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', contributorRoleId)
     principalId: deployIdentity.properties.principalId
@@ -329,6 +371,16 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
   ] : [
     pullRole
   ]
+}
+
+resource deployRoleApp 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(app.id, deployIdentity.id, contributorRoleId)
+  scope: app
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', contributorRoleId)
+    principalId: deployIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
 }
 
 // The names below match the GitHub Actions variables that .github/workflows/deploy.yml reads.
